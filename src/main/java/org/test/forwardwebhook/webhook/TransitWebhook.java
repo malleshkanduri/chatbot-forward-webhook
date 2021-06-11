@@ -1,5 +1,8 @@
 package org.test.forwardwebhook.webhook;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -10,30 +13,37 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
 @RestController
-public class WebhookController {
-
- 	@PostMapping(path = "/forwardwebhook")
+public class TransitWebhook {
+	
+	static Logger log = LogManager.getLogger(TransitWebhook.class);
+	@Value("${webhook.endpoint.url}")
+	String webhookUrl;
+	
+	@Value("${webhook.access.token}")
+	String webhookAccessToken;
+	
+	
+ 	@PostMapping(path = "/transitwebhook")
 	public String webhook(@RequestBody String req) {
-		
-		System.out.println("chatbot-forward-webhook : Message received: " + req);
-		
-		String url="http://localhost:8080/webhook";
+		log.info("Webhook message received: " + req);
 		
 		RestTemplate restTemplate = new RestTemplate();
 	  
 		HttpHeaders headers = new HttpHeaders();
+		
 		headers.setContentType(MediaType.APPLICATION_JSON);
+		headers.add("Authorization", webhookAccessToken);
+		
+		HttpEntity<String> entity = new HttpEntity<>(req, headers);
 	  
-		HttpEntity<String> entity = new HttpEntity<>(req);
-	  
-		restTemplate.postForObject(url, entity, String.class);
+		restTemplate.postForObject(webhookUrl, entity, String.class);
 				
 		return "PostForwardwebhook"; 
 	}
 	
  	@GetMapping(path = "/forwardwebhook")
  	public String getwebhook() {
-		System.out.println("forwardwebhook");
+		log.info("forwardwebhook");
 		return "GetForwardwebhook";
 	}
 	
